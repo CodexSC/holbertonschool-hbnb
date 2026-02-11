@@ -258,8 +258,7 @@ def create_place():
 ## 📚 Files Delivered
 
 1. **hbnb_package_diagram.md** - Complete documentation with diagram
-2. **hbnb_diagram.mermaid** - Standalone Mermaid diagram
-3. **hbnb_quick_reference.md** - This quick reference guide
+2. **hbnb_quick_reference.md** - This quick reference guide
 
 ---
 
