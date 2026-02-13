@@ -75,18 +75,6 @@ $ all User
 
 ---
 
-## 📁 Structure attendue
-
-- `console.py` — interface en ligne de commande (REPL)
-- `models/` — classes de données et logique métier
-- `tests/` — tests unitaires
-- `hbnb_venv/` — environnement virtuel local (fourni)
-- `README.md` — documentation (ce fichier)
-
-(Remarque : l'arborescence exacte peut varier selon votre version du projet.)
-
----
-
 ## 🤝 Contribution
 
 - Ouvrez une issue pour signaler un bug ou proposer une amélioration.
