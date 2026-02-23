@@ -85,13 +85,13 @@ BaseModel (Abstract Base Class)
 
 ### Component Overview
 
-| Component | Responsibility | Lifecycle |
-|-----------|----------------|-----------|
-| **BaseModel** | Common entity infrastructure | Abstract - never instantiated |
-| **User** | Identity, authentication, ownership | Created once, updated frequently |
-| **Place** | Property information, availability | Created by users, updated moderately |
-| **Review** | Feedback and ratings | Created once, rarely updated |
-| **Amenity** | Feature catalog | System-managed, rarely changes |
+| Component | Responsibility | Lifecycle | CRUD Scope |
+|-----------|----------------|-----------|------------|
+| **BaseModel** | Common entity infrastructure | Abstract - never instantiated | Shared metadata (`crud_profile`) |
+| **User** | Identity, authentication, ownership | Created once, updated frequently | C/R/U/D (domain-constrained) |
+| **Place** | Property information, availability | Created by users, updated moderately | C/R/U/D |
+| **Review** | Feedback and ratings | Created once, rarely updated | C/R/U/D |
+| **Amenity** | Feature catalog | System-managed, rarely changes | C/R/U/D |
 
 ### Entity State Diagram
 
@@ -125,6 +125,7 @@ BaseModel (Abstract Base Class)
 | `id` | UUID4 | Globally unique identifier | Immutable, Primary Key | Yes (on creation) |
 | `created_at` | datetime | UTC timestamp of entity creation | Immutable | Yes (on creation) |
 | `updated_at` | datetime | UTC timestamp of last modification | Auto-updated | Yes (on save) |
+| `crud_profile` | str | Declares supported CRUD operations for the entity | Default `CRUD`, inherited by all subclasses | Yes (default value) |
 
 #### Methods
 
