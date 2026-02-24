@@ -15,13 +15,28 @@ sequenceDiagram
     participant DB as Database Layer
 
     User->>API: Submit new place form (title, description, price, location, amenities)
-    API->>Facade: createPlace(data, userId)
-    Facade->>BL: Validate input and check ownership rules
-    BL->>DB: Insert new place with details and owner reference
-    DB-->>BL: Confirmation of place creation
-    BL-->>Facade: Return success or error
-    Facade-->>API: Return final result
-    API-->>User: Display confirmation or error
+
+    alt Invalid data, request rejected
+        API-->>User: 400 Bad Request
+    else Missing token, access denied
+        API-->>User: 401 Unauthorized
+    else Valid request
+        API->>Facade: createPlace(data, userId)
+
+        Facade->>BL: Validate input
+
+        alt
+            BL-->>Facade: User not found
+            Facade-->>API: User not found
+            API-->>User: 404 Not Found
+        else  Validation successful
+            BL->>DB: Insert new place with owner reference
+            DB-->>BL: Confirmation of place creation
+            BL-->>Facade: Return success
+            Facade-->>API: Return final result
+            API-->>User: 201 Created
+        end
+    end
 ```
 
 ## Acteurs impliqués
