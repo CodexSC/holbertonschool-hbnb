@@ -6,7 +6,7 @@ class Place(BaseModel):
     # Relation : appartient à un User (owner), reçoit des Reviews, propose des Amenities
 
     def __init__(self, title, description, price_per_night,
-                 latitude, longitude, owner, max_guests=1):
+                latitude, longitude, owner, max_guests=1):
         """Initialise un lieu avec ses coordonnées, son prix et son propriétaire."""
         super().__init__()
         self.title = title
@@ -20,7 +20,7 @@ class Place(BaseModel):
         self.reviews = []           # liste de Review (one-to-many)
         self.amenities = []         # liste d'Amenity (many-to-many)
 
-    # ── Setters avec validation ──────────────────────────────────────────────
+    # ── Setters avec validation
 
     @property
     def title(self):
@@ -72,7 +72,7 @@ class Place(BaseModel):
             raise ValueError("longitude must be between -180 and 180.")
         self._longitude = float(value)
 
-    # ── Gestion des relations ────────────────────────────────────────────────
+    # ── Gestion des relations 
 
     def add_review(self, review):
         """Attache une Review à ce lieu."""
