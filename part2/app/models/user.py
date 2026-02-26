@@ -3,21 +3,40 @@ import re
 # Import du module hashlib pour hasher les mots de passe
 import hashlib  
 # Import de la classe parent BaseModel pour hériter des attributs communs
-from part2.app.models.base_model import BaseModel  
+from part2.app.models.base_model import BaseModel
 
 
 class User(BaseModel):
     # Chaque User peut avoir des Places et écrire des Reviews
 
-    def __init__(self, first_name, last_name, email, password, is_admin=False):
-        """Initialise un utilisateur avec validation et hash du mot de passe."""
-        super().__init__()  # Appelle le constructeur de BaseModel
-        self.first_name = first_name    # Passe par le setter pour validation
-        self.last_name = last_name      # Idem pour le nom
-        self.email = email              # Idem pour l'email
-        # Hash le mot de passe pour ne jamais stocker le mot de passe en clair
-        self.password_hash = self._hash_password(password)  
-        self.is_admin = is_admin        # Booléen pour savoir si c'est un admin
+    def __init__(self, first_name=None, last_name=None, email=None,
+                 password=None, is_admin=False, **kwargs):
+        """Initialise un utilisateur avec validation et hash du mot de passe.
+
+        Cette signature accepte les champs explicites pour les créations
+        normales ainsi que ``**kwargs`` lorsqu'on reconstruit un objet à
+        partir de la persistence (id, created_at, updated_at, etc.).
+        """
+        super().__init__(**kwargs)  # Appelle le constructeur de BaseModel
+
+        # Affectations passant par les setters qui valident
+        if first_name is not None:
+            self.first_name = first_name
+        if last_name is not None:
+            self.last_name = last_name
+        if email is not None:
+            self.email = email
+
+        # Le mot de passe peut arriver en clair lors de la création;
+        # on ne stocke que le hash. Ne pas remplacer s'il existe déjà via
+        # kwargs (reconstruction depuis le stockage).
+        if password is not None:
+            self.password_hash = self._hash_password(password)
+        elif "password_hash" in kwargs:
+            # si le hash était fourni par kwargs, on le conserve
+            self.password_hash = kwargs.get("password_hash")
+
+        self.is_admin = is_admin
 
     # ── Helpers de validation
 
@@ -105,19 +124,3 @@ class User(BaseModel):
             "is_admin": self.is_admin,      # Ajoute info admin
         })
         return d  # Retourne le dictionnaire prêt pour JSON/API
-from .base_model import BaseModel
-
-
-class User(BaseModel): # section pour définir les champs spécifiques à l'utilisateur, comme email, password, first_name et last_name. Le champ email est requis et doit être unique, tandis que les autres champs sont optionnels.
-    def __init__(self, **kwargs):
-        self.email = kwargs.get('email')
-        self.password = kwargs.get('password')
-        self.first_name = kwargs.get('first_name', '')
-        self.last_name = kwargs.get('last_name', '')
-        super().__init__(**kwargs)
-
-    def to_dict(self): # section pour convertir l'objet en dictionnaire, en excluant les champs sensibles comme le mot de passe dans le cas de l'utilisateur
-        d = super().to_dict()
-        if 'password' in d:
-            d.pop('password')
-        return d
