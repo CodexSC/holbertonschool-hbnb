@@ -1,9 +1,6 @@
-# Import du module regex pour valider les emails
-import re  
-# Import du module hashlib pour hasher les mots de passe
-import hashlib  
-# Import de la classe parent BaseModel pour hériter des attributs communs
-from part2.app.models.base_model import BaseModel
+import re
+import hashlib
+from app.models.base_model import BaseModel
 
 
 class User(BaseModel):
@@ -17,9 +14,13 @@ class User(BaseModel):
         normales ainsi que ``**kwargs`` lorsqu'on reconstruit un objet à
         partir de la persistence (id, created_at, updated_at, etc.).
         """
-        super().__init__(**kwargs)  # Appelle le constructeur de BaseModel
+        super().__init__(**kwargs)
 
-        # Affectations passant par les setters qui valident
+        self._first_name = None
+        self._last_name = None
+        self._email = None
+        self._password_hash = kwargs.get('password_hash')
+
         if first_name is not None:
             self.first_name = first_name
         if last_name is not None:
@@ -28,99 +29,104 @@ class User(BaseModel):
             self.email = email
 
         # Le mot de passe peut arriver en clair lors de la création;
-        # on ne stocke que le hash. Ne pas remplacer s'il existe déjà via
-        # kwargs (reconstruction depuis le stockage).
+        # on ne stocke que le hash sous un attribut privé.
+        # Ne pas remplacer s'il existe déjà via kwargs (reconstruction).
         if password is not None:
-            self.password_hash = self._hash_password(password)
-        elif "password_hash" in kwargs:
-            # si le hash était fourni par kwargs, on le conserve
-            self.password_hash = kwargs.get("password_hash")
+            self._password_hash = self._hash_password(password)
 
         self.is_admin = is_admin
 
-    # ── Helpers de validation
+    # ── Helpers de validation ────────────────────────────────────────────────
 
     @staticmethod
     def _validate_name(value, field):
         """Vérifie que le nom est une string non vide de max 50 caractères."""
-        if not value or not isinstance(value, str):  # Vérifie qu’il existe et est une string
-            raise ValueError(f"{field} is required.")  
-        if len(value) > 50:  # Vérifie la longueur max
+        if not value or not isinstance(value, str):
+            raise ValueError(f"{field} is required.")
+        value = value.strip()           # strip AVANT la vérification de longueur
+        if not value:                   # attrape les chaînes tout-blancs ex: "   "
+            raise ValueError(f"{field} is required.")
+        if len(value) > 50:
             raise ValueError(f"{field} must be 50 characters or fewer.")
-        return value.strip()  # Supprime les espaces inutiles en début/fin
+        return value
 
     @staticmethod
     def _validate_email(email):
         """Vérifie le format email avec une regex."""
-        pattern = r"^[\w\.-]+@[\w\.-]+\.\w{2,}$"  # Regex simple pour email
-        if not re.match(pattern, email):  # Vérifie si ça correspond
+        pattern = r"^[\w\.-]+@[\w\.-]+\.\w{2,}$"
+        if not re.match(pattern, email):
             raise ValueError(f"Invalid email format: {email}")
-        return email.lower()  # Retourne l’email en minuscules
+        return email.lower()
 
     @staticmethod
     def _hash_password(password):
-        """Retourne le hash SHA-256 du mot de passe."""
-        if not password:  # Vérifie que le mot de passe existe
+        """Retourne le hash SHA-256 du mot de passe.
+
+        Note: SHA-256 est suffisant pour la partie 2. En partie 3,
+        remplacer par bcrypt ou argon2 avant toute mise en production.
+        """
+        if not password:
             raise ValueError("Password is required.")
-        # Encode la string en bytes puis calcule le hash SHA-256 et retourne en hexadécimal
         return hashlib.sha256(password.encode()).hexdigest()
 
-    # ── Setters avec validation (pattern @property)
+    # ── Setters avec validation (pattern @property) ──────────────────────────
 
     @property
     def first_name(self):
-        """Retourne le prénom de l'utilisateur."""
         return self._first_name
 
     @first_name.setter
     def first_name(self, value):
-        """Valide et assigne le prénom via _validate_name."""
         self._first_name = self._validate_name(value, "first_name")
 
     @property
     def last_name(self):
-        """Retourne le nom de famille."""
         return self._last_name
 
     @last_name.setter
     def last_name(self, value):
-        """Valide et assigne le nom via _validate_name."""
         self._last_name = self._validate_name(value, "last_name")
 
     @property
     def email(self):
-        """Retourne l'email de l'utilisateur."""
         return self._email
 
     @email.setter
     def email(self, value):
-        """Valide et assigne l'email via _validate_email."""
         self._email = self._validate_email(value)
 
     # ── Méthodes métier ──────────────────────────────────────────────────────
 
     def update_profile(self, data):
-        """Autorise uniquement la mise à jour des champs autorisés du profil."""
-        allowed = {"first_name", "last_name", "email"}  # Champs modifiables
-        # Appelle update() de BaseModel seulement sur les champs autorisés
+        """Autorise uniquement la mise à jour de first_name et last_name.
+
+        L'email est intentionnellement exclu : sa mise à jour implique
+        une vérification d'unicité qui ne peut se faire qu'au niveau
+        du facade (accès au repo nécessaire).
+        """
+        allowed = {'first_name', 'last_name'}
         self.update({k: v for k, v in data.items() if k in allowed})
 
     def change_password(self, new_password):
         """Hash le nouveau mot de passe et remplace l'ancien."""
-        self.password_hash = self._hash_password(new_password)  # Hash
-        self.save()  # Met à jour updated_at
+        self._password_hash = self._hash_password(new_password)
+        self.save()
 
     def authenticate(self, password):
         """Compare le hash du mot de passe fourni avec celui stocké."""
-        return self.password_hash == self._hash_password(password)  # True/False
+        return self._password_hash == self._hash_password(password)
 
     def to_dict(self):
-        """Retourne un dictionnaire avec les infos publiques de l'utilisateur."""
-        d = super().to_dict()  # Appelle BaseModel.to_dict() → id, created_at, updated_at
+        """Retourne un dictionnaire avec les infos publiques de l'utilisateur.
+
+        Le hash du mot de passe est explicitement exclu — il ne doit
+        jamais être exposé dans une réponse API.
+        """
+        d = super().to_dict()
         d.update({
-            "first_name": self.first_name,  # Ajoute prénom
-            "last_name": self.last_name,    # Ajoute nom
-            "email": self.email,            # Ajoute email
-            "is_admin": self.is_admin,      # Ajoute info admin
+            'first_name': self.first_name,
+            'last_name': self.last_name,
+            'email': self.email,
+            'is_admin': self.is_admin,
         })
-        return d  # Retourne le dictionnaire prêt pour JSON/API
+        return d   # password_hash absent : attribut privé (_) ignoré par BaseModel

@@ -1,4 +1,3 @@
-# UUID for unique identifiers and datetime utilities (UTC-aware)
 import uuid
 from datetime import datetime, timezone
 
@@ -6,7 +5,6 @@ from datetime import datetime, timezone
 class BaseModel:
     """
     Base class for HBnB models.
-
     Provides a UUID `id` plus `created_at`/`updated_at` timestamps
     (UTC-aware) and common helpers used throughout the project. The
     constructor accepts ``**kwargs`` so instances can be reconstructed
@@ -17,7 +15,7 @@ class BaseModel:
         # identifier
         self.id = kwargs.get('id', str(uuid.uuid4()))
 
-        # timestamps (keep provided values when rebuilding)
+        # timestamps (keep provided values when rebuilding from persisted data)
         now = datetime.now(timezone.utc)
         self.created_at = kwargs.get('created_at', now)
         self.updated_at = kwargs.get('updated_at', now)
@@ -36,6 +34,8 @@ class BaseModel:
 
         Reserved fields ``id`` and ``created_at`` are ignored to avoid
         inadvertently altering identity or creation time.
+        ``setattr`` is used so property setters on subclasses are
+        triggered, keeping validation in one place.
         """
         for key, value in data.items():
             if key in {'id', 'created_at'}:
@@ -44,15 +44,16 @@ class BaseModel:
         self.save()
 
     def to_dict(self):
-        """Return a dict representation with ISO‑formatted timestamps.
+        """Return a dict representation with ISO-formatted timestamps.
 
-        Any :class:`datetime` values are converted to ``ISO`` strings so
-        the result is JSON-serializable.
+        Private backing attributes (``_name``, ``_description``, …) are
+        skipped — subclasses expose those fields through their own
+        ``to_dict()`` via property access, avoiding double-serialization
+        of the same data under a mangled name.
         """
         result = {}
         for k, v in self.__dict__.items():
-            if isinstance(v, datetime):
-                result[k] = v.isoformat()
-            else:
-                result[k] = v
+            if k.startswith('_'):
+                continue            # exposed cleanly by subclass to_dict()
+            result[k] = v.isoformat() if isinstance(v, datetime) else v
         return result
