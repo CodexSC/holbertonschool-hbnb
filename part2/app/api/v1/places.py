@@ -89,7 +89,7 @@ class PlaceResource(Resource):
         # get_place() retourne None si le lieu n'existe pas
 
         if not place:
-            return {'error': 'Place not found'}, 404
+            api.abort(404, 'Place not found')
 
         return {
             'id': place.id,
