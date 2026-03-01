@@ -26,8 +26,14 @@ class PlaceList(Resource):
         place_data = api.payload
         # api.payload contient le JSON envoyé par le client
 
+        # Vérifie que la méthode de création de place est disponible dans la facade
+        create_place_fn = getattr(facade, "create_place", None)
+        if create_place_fn is None:
+            # Fonctionnalité non encore implémentée côté service/facade
+            return {'error': 'Place creation not implemented in service layer'}, 501
+
         try:
-            new_place = facade.create_place(place_data)
+            new_place = create_place_fn(place_data)
             # La facade valide owner_id, price, latitude, longitude
             # et lève ValueError si quelque chose est invalide
         except ValueError as e:
