@@ -42,8 +42,8 @@ curl -X PUT http://127.0.0.1:5000/api/v1/users/<user_id> \
 curl -X GET http://127.0.0.1:5000/api/v1/amenities/
 
 # Créer une amenity
-curl -X POST http://127.0.0.1:5000/api/v1/amenities/ \
-  -H "Content-Type: application/json" \
+curl -X POST http://127.0.0.1:5000/api/v1/amenities/
+  -H "Content-Type: application/json"
   -d '{
     "name": "Pool",
     "description": "Outdoor swimming pool"
@@ -53,8 +53,8 @@ curl -X POST http://127.0.0.1:5000/api/v1/amenities/ \
 curl -X GET http://127.0.0.1:5000/api/v1/amenities/<amenity_id>
 
 # Mettre à jour une amenity
-curl -X PUT http://127.0.0.1:5000/api/v1/amenities/<amenity_id> \
-  -H "Content-Type: application/json" \
+curl -X PUT http://127.0.0.1:5000/api/v1/amenities/<amenity_id>
+  -H "Content-Type: application/json"
   -d '{
     "name": "Indoor Pool",
     "description": "Heated indoor pool"
@@ -69,8 +69,8 @@ curl -X PUT http://127.0.0.1:5000/api/v1/amenities/<amenity_id> \
 curl -X GET http://127.0.0.1:5000/api/v1/places/
 
 # Créer un place
-curl -X POST http://127.0.0.1:5000/api/v1/places/ \
-  -H "Content-Type: application/json" \
+curl -X POST http://127.0.0.1:5000/api/v1/places/
+  -H "Content-Type: application/json"
   -d '{
     "title": "Nice Apartment",
     "description": "A lovely apartment in the city center",
