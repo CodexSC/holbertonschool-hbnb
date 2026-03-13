@@ -22,6 +22,9 @@ class HBnBFacade:
     def get_user(self, user_id):
         return self.user_repo.get(user_id)
 
+    def get_user_by_email(self, email):
+        return self.user_repo.get_by_attribute('email', email)
+
     def get_users(self):
         return self.user_repo.get_all()
 
@@ -37,6 +40,7 @@ class HBnBFacade:
         existing = self.user_repo.get_by_attribute('email', email)
         if existing:
             raise ValueError('email already in use')
+        # Allow explicit is_admin flag when provided
         from app.models.user import User
         user = User(**user_data)
         # Le hash bcrypt est appliqué dans User.__init__() via hash_password()
@@ -52,7 +56,14 @@ class HBnBFacade:
         # On ne le passe PAS dans update() qui écrirait le hash en clair
         if 'password' in data:
             user.hash_password(data.pop('password'))
-        data = {k: v for k, v in data.items() if k != 'email'}
+
+        # Validate email uniqueness if updated
+        if 'email' in data:
+            new_email = data['email']
+            existing = self.user_repo.get_by_attribute('email', new_email)
+            if existing and existing.id != user_id:
+                raise ValueError('email already in use')
+
         user.update(data)
         return user
 

@@ -1,10 +1,12 @@
 from flask import Flask
 from flask_restx import Api
 from flask_bcrypt import Bcrypt
+from flask_jwt_extended import JWTManager
 
 from app.config import config
 
 bcrypt = Bcrypt()
+jwt = JWTManager()
 
 
 def create_app(config_name='development'):
@@ -18,9 +20,12 @@ def create_app(config_name='development'):
 
     # configuration
     app.config.from_object(config[config_name])
+    # JWT configuration: use the same secret key (fallback to default)
+    app.config.setdefault('JWT_SECRET_KEY', app.config.get('SECRET_KEY', 'default_secret_key'))
 
     # extensions
     bcrypt.init_app(app)
+    jwt.init_app(app)
 
     # API setup
     api = Api(

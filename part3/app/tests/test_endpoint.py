@@ -3,6 +3,7 @@ import unittest
 import uuid
 
 from app import create_app
+from app.services import facade
 
 
 def _unique_email(prefix='user'):
@@ -16,9 +17,34 @@ class BaseTestCase(unittest.TestCase):
         self.app = create_app()
         self.client = self.app.test_client()
 
+        # Ensure we have an admin user to authenticate requests that require it
+        self.admin_email = 'admin@test.com'
+        self.admin_password = 'adminpass'
+        try:
+            facade.create_user({
+                'email': self.admin_email,
+                'password': self.admin_password,
+                'first_name': 'Admin',
+                'last_name': 'User',
+                'is_admin': True,
+            })
+        except ValueError:
+            pass
+
+        self.auth_headers = self._login(self.admin_email, self.admin_password)
+
     # ------------------------------------------------------------------
     # Helpers
     # ------------------------------------------------------------------
+
+    def _login(self, email, password):
+        resp = self.client.post('/api/v1/users/login', json={
+            'email': email,
+            'password': password,
+        })
+        self.assertEqual(resp.status_code, 200)
+        token = resp.get_json()['access_token']
+        return {'Authorization': f'Bearer {token}'}
 
     def _create_user(self, email=None, first='Alice', last='Smith',
                      password='pass1234'):
@@ -29,10 +55,10 @@ class BaseTestCase(unittest.TestCase):
             'password': password,
             'first_name': first,
             'last_name': last,
-        })
+        }, headers=self.auth_headers)
 
     def _create_amenity(self, name='Wi-Fi'):
-        return self.client.post('/api/v1/amenities/', json={'name': name})
+        return self.client.post('/api/v1/amenities/', json={'name': name}, headers=self.auth_headers)
 
     def _create_place(self, owner_id, amenity_ids=None, **overrides):
         payload = {
@@ -45,7 +71,7 @@ class BaseTestCase(unittest.TestCase):
             'amenities': amenity_ids or [],
         }
         payload.update(overrides)
-        return self.client.post('/api/v1/places/', json=payload)
+        return self.client.post('/api/v1/places/', json=payload, headers=self.auth_headers)
 
     def _create_review(self, user_id, place_id, rating=4, comment='Nice!'):
         return self.client.post('/api/v1/reviews/', json={
@@ -53,7 +79,7 @@ class BaseTestCase(unittest.TestCase):
             'comment': comment,
             'user_id': user_id,
             'place_id': place_id,
-        })
+        }, headers=self.auth_headers)
 
 
 # ===========================================================================
@@ -70,11 +96,11 @@ class TestAmenityEndpoints(BaseTestCase):
         self.assertIn('id', data)
 
     def test_create_amenity_empty_name(self):
-        resp = self.client.post('/api/v1/amenities/', json={'name': ''})
+        resp = self.client.post('/api/v1/amenities/', json={'name': ''}, headers=self.auth_headers)
         self.assertEqual(resp.status_code, 400)
 
     def test_create_amenity_name_too_long(self):
-        resp = self.client.post('/api/v1/amenities/', json={'name': 'A' * 51})
+        resp = self.client.post('/api/v1/amenities/', json={'name': 'A' * 51}, headers=self.auth_headers)
         self.assertEqual(resp.status_code, 400)
 
     def test_list_amenities(self):
@@ -97,13 +123,15 @@ class TestAmenityEndpoints(BaseTestCase):
     def test_update_amenity(self):
         amenity_id = self._create_amenity('Garden').get_json()['id']
         resp = self.client.put(f'/api/v1/amenities/{amenity_id}',
-                               json={'name': 'Rooftop Garden'})
+                               json={'name': 'Rooftop Garden'},
+                               headers=self.auth_headers)
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp.get_json()['name'], 'Rooftop Garden')
 
     def test_update_amenity_not_found(self):
         resp = self.client.put('/api/v1/amenities/nonexistent',
-                               json={'name': 'X'})
+                               json={'name': 'X'},
+                               headers=self.auth_headers)
         self.assertEqual(resp.status_code, 404)
 
 
@@ -124,6 +152,29 @@ class TestPlaceEndpoints(BaseTestCase):
         data = resp.get_json()
         self.assertIn('id', data)
         self.assertEqual(data['owner_id'], self.owner_id)
+
+    def test_non_owner_cannot_update_place(self):
+        # Create a second user (non-owner) and get a token
+        other_email = _unique_email('other')
+        other_password = 'pass1234'
+        other_user = self._create_user(email=other_email, password=other_password).get_json()
+        other_headers = self._login(other_email, other_password)
+
+        # Create a place owned by the first user
+        place_id = self._create_place(self.owner_id).get_json()['id']
+
+        resp = self.client.put(
+            f'/api/v1/places/{place_id}',
+            json={
+                'title': 'Updated Title',
+                'price': 120.0,
+                'latitude': 40.71,
+                'longitude': -74.01,
+                'owner_id': self.owner_id,
+            },
+            headers=other_headers,
+        )
+        self.assertEqual(resp.status_code, 403)
 
     def test_create_place_with_amenity(self):
         amenity_id = self._create_amenity('Sauna').get_json()['id']
@@ -179,14 +230,16 @@ class TestPlaceEndpoints(BaseTestCase):
         resp = self.client.put(f'/api/v1/places/{place_id}',
                                json={'title': 'Updated Title', 'price': 120.0,
                                      'latitude': 40.71, 'longitude': -74.01,
-                                     'owner_id': self.owner_id})
+                                     'owner_id': self.owner_id},
+                               headers=self.auth_headers)
         self.assertEqual(resp.status_code, 200)
 
     def test_update_place_not_found(self):
         resp = self.client.put('/api/v1/places/nonexistent',
                                json={'title': 'X', 'price': 10,
                                      'latitude': 0, 'longitude': 0,
-                                     'owner_id': self.owner_id})
+                                     'owner_id': self.owner_id},
+                               headers=self.auth_headers)
         self.assertEqual(resp.status_code, 404)
 
 
@@ -254,20 +307,37 @@ class TestReviewEndpoints(BaseTestCase):
             self.reviewer_id, self.place_id
         ).get_json()['id']
         resp = self.client.put(f'/api/v1/reviews/{review_id}',
-                               json={'rating': 5, 'comment': 'Even better!'})
+                               json={'rating': 5, 'comment': 'Even better!'},
+                               headers=self.auth_headers)
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp.get_json()['rating'], 5)
 
+    def test_non_owner_cannot_update_review(self):
+        # Create a second user and ensure they can't edit a review they don't own
+        other_email = _unique_email('other')
+        other_password = 'pass1234'
+        other_user = self._create_user(email=other_email, password=other_password).get_json()
+        other_headers = self._login(other_email, other_password)
+
+        review_id = self._create_review(self.reviewer_id, self.place_id).get_json()['id']
+        resp = self.client.put(
+            f'/api/v1/reviews/{review_id}',
+            json={'rating': 2, 'comment': 'Not allowed'},
+            headers=other_headers,
+        )
+        self.assertEqual(resp.status_code, 403)
+
     def test_update_review_not_found(self):
         resp = self.client.put('/api/v1/reviews/nonexistent',
-                               json={'rating': 3, 'comment': 'ok'})
+                               json={'rating': 3, 'comment': 'ok'},
+                               headers=self.auth_headers)
         self.assertEqual(resp.status_code, 404)
 
     def test_delete_review(self):
         review_id = self._create_review(
             self.reviewer_id, self.place_id
         ).get_json()['id']
-        resp = self.client.delete(f'/api/v1/reviews/{review_id}')
+        resp = self.client.delete(f'/api/v1/reviews/{review_id}', headers=self.auth_headers)
         self.assertEqual(resp.status_code, 200)
         # Confirm it's gone
         self.assertEqual(
@@ -275,7 +345,7 @@ class TestReviewEndpoints(BaseTestCase):
         )
 
     def test_delete_review_not_found(self):
-        resp = self.client.delete('/api/v1/reviews/nonexistent')
+        resp = self.client.delete('/api/v1/reviews/nonexistent', headers=self.auth_headers)
         self.assertEqual(resp.status_code, 404)
 
     def test_get_reviews_by_place(self):

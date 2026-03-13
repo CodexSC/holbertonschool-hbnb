@@ -52,6 +52,15 @@ class User(BaseModel):
         # Import ici pour éviter les imports circulaires au démarrage
         self.password = bcrypt.generate_password_hash(password).decode('utf-8')
 
+    @property
+    def password_hash(self):
+        """Alias compatible avec les anciennes versions des tests."""
+        return self.password
+
+    def authenticate(self, password):
+        """Alias compatible avec les anciennes versions des tests."""
+        return self.verify_password(password)
+
     def verify_password(self, password):
         """Vérifie si le mot de passe fourni correspond au hash stocké.
 

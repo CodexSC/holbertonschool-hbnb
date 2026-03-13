@@ -1,4 +1,6 @@
 from flask_restx import Namespace, Resource, fields
+from flask_jwt_extended import get_jwt, get_jwt_identity, jwt_required
+
 from app.services import facade
 
 api = Namespace('places', description='Place operations')
@@ -18,12 +20,22 @@ place_model = api.model('Place', {
 @api.route('/')
 class PlaceList(Resource):
 
+    @jwt_required()
     @api.expect(place_model, validate=True)
     @api.response(201, 'Place successfully created')
     @api.response(400, 'Invalid input data')
+    @api.response(403, 'Unauthorized action')
     def post(self):
         """Register a new place"""
+        current = get_jwt()
+        is_admin = current.get('is_admin', False)
+        user_id = get_jwt_identity()
+
         place_data = api.payload
+        # Ensure regular users can only create places they own
+        if not is_admin and place_data.get('owner_id') != user_id:
+            return {'error': 'Unauthorized action'}, 403
+
         # api.payload contient le JSON envoyé par le client
 
         # Vérifie que la méthode de création de place est disponible dans la facade
@@ -117,12 +129,29 @@ class PlaceResource(Resource):
             ]
         }, 200
 
+    @jwt_required()
     @api.expect(place_model)
     @api.response(200, 'Place updated successfully')
+    @api.response(403, 'Unauthorized action')
     @api.response(404, 'Place not found')
     @api.response(400, 'Invalid input data')
     def put(self, place_id):
         """Update a place's information"""
+        current = get_jwt()
+        is_admin = current.get('is_admin', False)
+        user_id = get_jwt_identity()
+
+        try:
+            place = facade.get_place(place_id)
+        except NotImplementedError:
+            return {'error': 'Place retrieval not implemented'}, 501
+
+        if not place:
+            return {'message': 'Place not found'}, 404
+
+        if not is_admin and place.owner.id != user_id:
+            return {'error': 'Unauthorized action'}, 403
+
         place_data = api.payload
         # api.payload contient le JSON envoyé par le client
 
