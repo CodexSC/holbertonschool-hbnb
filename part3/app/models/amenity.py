@@ -11,7 +11,6 @@ class Amenity(BaseModel):
     name        = db.Column(db.String(50),  nullable=False, unique=True)
     description = db.Column(db.String(256), nullable=True)
 
-    # La relation many-to-many avec Place est définie dans Place via
     # secondary=place_amenity et backref='places'
     # On peut donc accéder à amenity.places directement
 
