@@ -5,9 +5,24 @@ from app.models.base_model import BaseModel
 class Review(BaseModel):
     __tablename__ = 'reviews'
 
-    # Colonnes SQLAlchemy — pas de FK encore (Task 8)
+    # Colonnes SQLAlchemy
     text   = db.Column(db.String(2048), nullable=False)
     rating = db.Column(db.Integer,      nullable=False)
+
+    # Clés étrangères — Task 8
+    user_id  = db.Column(db.String(36), db.ForeignKey('users.id'),  nullable=False)
+    # Chaque review est écrite par un seul user
+    place_id = db.Column(db.String(36), db.ForeignKey('places.id'), nullable=False)
+    # Chaque review concerne un seul place
+
+    # Relations SQLAlchemy — Task 8
+    user = db.relationship(
+        'User',
+        backref=db.backref('reviews', lazy=True)
+        # backref crée user.reviews pour accéder à toutes les
+        # reviews d'un user depuis l'objet User
+    )
+    # Note : la relation 'place' est gérée via backref dans Place.reviews
 
     def __init__(self, rating, comment, place, user):
         super().__init__()
@@ -40,11 +55,13 @@ class Review(BaseModel):
         self.comment = comment
         # Alias gardé pour compatibilité avec le reste du code
 
-        self.place = place
-        # Instance de Place (relation entre entités)
+        self.place    = place
+        self.place_id = place.id
+        # place est l'objet, place_id est la FK stockée en base
 
-        self.user = user
-        # Instance de User (relation entre entités)
+        self.user    = user
+        self.user_id = user.id
+        # user est l'objet, user_id est la FK stockée en base
 
     def create(self):
         """Crée la review et l'associe automatiquement au lieu"""
@@ -92,9 +109,9 @@ class Review(BaseModel):
             'rating': self.rating,
             'comment': self.text,
             # On retourne sous la clé 'comment' pour compatibilité API
-            'place_id': self.place.id,
+            'place_id': self.place_id,
             # On retourne l'id du place, pas l'objet entier
-            'user_id': self.user.id
+            'user_id': self.user_id
             # On retourne l'id du user, pas l'objet entier
         })
         return base

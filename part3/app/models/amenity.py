@@ -1,5 +1,7 @@
 from app import db
 from app.models.base_model import BaseModel
+# La relation many-to-many avec Place est gérée via backref dans place.py
+# Amenity n'a pas besoin de FK propre
 
 
 class Amenity(BaseModel):
@@ -8,6 +10,10 @@ class Amenity(BaseModel):
     # Colonnes SQLAlchemy
     name        = db.Column(db.String(50),  nullable=False, unique=True)
     description = db.Column(db.String(256), nullable=True)
+
+    # La relation many-to-many avec Place est définie dans Place via
+    # secondary=place_amenity et backref='places'
+    # On peut donc accéder à amenity.places directement
 
     def __init__(self, name, description=""):
         super().__init__()
