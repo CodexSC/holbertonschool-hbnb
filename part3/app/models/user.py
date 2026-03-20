@@ -15,6 +15,9 @@ class User(BaseModel):
     password   = db.Column(db.String(128), nullable=False)
     is_admin   = db.Column(db.Boolean,     default=False)
 
+    # Les relations user.places et user.reviews sont créées
+    # automatiquement via les backref définis dans Place et Review
+
     def __init__(self, first_name, last_name, email, password, is_admin=False):
         super().__init__()
 
@@ -74,5 +77,6 @@ class User(BaseModel):
             'last_name':  self.last_name,
             'email':      self.email,
             'is_admin':   self.is_admin,
+            # password volontairement absent pour la sécurité
         })
         return base
