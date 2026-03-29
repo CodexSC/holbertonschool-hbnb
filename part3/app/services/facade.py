@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from typing import Any
 
-from app.models.entities import Amenity, Place, Review, User
-
 from app.persistence.repository import InMemoryRepository
 from app.services.repositories.user_repository import UserRepository
 

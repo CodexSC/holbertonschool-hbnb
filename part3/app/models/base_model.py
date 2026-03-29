@@ -13,6 +13,16 @@ class BaseModel(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow,
                            onupdate=datetime.utcnow)
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        if not self.id:
+            self.id = str(uuid.uuid4())
+        now = datetime.utcnow()
+        if not self.created_at:
+            self.created_at = now
+        if not self.updated_at:
+            self.updated_at = now
+
     def save(self):
         self.updated_at = datetime.utcnow()
         db.session.commit()
