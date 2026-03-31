@@ -52,4 +52,7 @@ def create_app(config_name='development'):
     from app.api.v1.reviews import api as reviews_ns
     api.add_namespace(reviews_ns, path='/api/v1/reviews')
 
+    with app.app_context():
+        db.create_all()
+
     return app
