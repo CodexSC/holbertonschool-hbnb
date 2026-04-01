@@ -31,12 +31,22 @@ def create_app(config_name='development'):
     db.init_app(app)
 
     # API setup
+    authorizations = {
+        'Bearer': {
+            'type': 'apiKey',
+            'in': 'header',
+            'name': 'Authorization',
+            'description': 'Entrez: Bearer <votre_token>',
+        }
+    }
     api = Api(
         app,
         version='1.0',
         title='HBnB API',
         description='HBnB Application API',
-        doc='/doc',  # Swagger UI séparé du préfixe API
+        doc='/doc',
+        authorizations=authorizations,
+        security='Bearer',
     )
 
     # register namespaces (lazy imports to avoid circulars)
