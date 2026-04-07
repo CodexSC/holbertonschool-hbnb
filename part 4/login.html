@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HBnB - Login</title>
+    <link rel="icon" type="image/png" href="icon.png" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="index.html">
+        <img src="logo.png" alt="HBnB logo" class="logo" />
+        <h1 class="site-title">HBnB</h1>
+      </a>
+      <nav class="nav-links" aria-label="Primary navigation">
+        <a class="nav-link" href="index.html">Places</a>
+        <a class="login-button" href="login.html">Login</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero">
+        <h2>Welcome back</h2>
+        <p>Log in to explore places and share your reviews.</p>
+      </section>
+
+      <section class="form-card" aria-labelledby="login-heading">
+        <h3 id="login-heading">Login Form</h3>
+        <form id="login-form" class="form" novalidate>
+          <div class="form-row">
+            <label for="email">Email</label>
+            <input id="email" name="email" type="email" autocomplete="email" required />
+          </div>
+
+          <div class="form-row">
+            <label for="password">Password</label>
+            <input id="password" name="password" type="password" autocomplete="current-password" required />
+          </div>
+
+          <button type="submit">Sign In</button>
+          <p id="message" class="message" role="status" aria-live="polite"></p>
+        </form>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>All rights reserved.</p>
+    </footer>
+
+    <script type="module" src="js/login.js"></script>
+  </body>
+</html>

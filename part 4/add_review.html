@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HBnB - Add Review</title>
+    <link rel="icon" type="image/png" href="icon.png" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="index.html">
+        <img src="logo.png" alt="HBnB logo" class="logo" />
+        <h1 class="site-title">HBnB</h1>
+      </a>
+      <nav class="nav-links" aria-label="Primary navigation">
+        <a class="nav-link" href="index.html">Places</a>
+        <a class="login-button" href="login.html">Login</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="form-card add-review" aria-labelledby="review-heading">
+        <h2 id="review-heading">Add Review</h2>
+        <form id="review-form" class="form" novalidate>
+          <div class="form-row">
+            <label for="rating">Rating (1 to 5)</label>
+            <input id="rating" name="rating" type="number" min="1" max="5" required />
+          </div>
+
+          <div class="form-row">
+            <label for="comment">Comment</label>
+            <textarea id="comment" name="comment" rows="5" minlength="3" required></textarea>
+          </div>
+
+          <button type="submit">Submit Review</button>
+          <p id="message" class="message" role="status" aria-live="polite"></p>
+        </form>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>All rights reserved.</p>
+    </footer>
+
+    <script type="module" src="js/add_review.js"></script>
+  </body>
+</html>
