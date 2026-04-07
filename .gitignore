@@ -21,3 +21,6 @@ dist/
 # Ignore OS files
 .DS_Store
 Thumbs.db
+
+# Ignore unrelated project directory
+part3/
