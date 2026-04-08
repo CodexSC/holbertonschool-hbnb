@@ -1,4 +1,8 @@
-# HBnB Frontend - Part 4
+<p align="center">
+  <img src="favicon-96x96.png" alt="HBnB Logo" width="96" height="96">
+</p>
+
+<h1 align="center">HBnB Frontend - Part 4</h1>
 
 A modular, vanilla JavaScript frontend for HBnB that connects to a REST API and delivers:
 - authentication with JWT cookies
