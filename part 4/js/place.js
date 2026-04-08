@@ -1,11 +1,16 @@
 import { apiRequest } from "./api.js";
-import { getTokenCookie, isAuthenticated } from "./auth.js";
+import { bindLogout, getTokenCookie } from "./auth.js";
 
 const placeDetails = document.getElementById("place-details");
 const reviewsList = document.getElementById("reviews-list");
 const message = document.getElementById("message");
 const addReviewSection = document.getElementById("add-review-access");
 const addReviewButton = document.getElementById("add-review-button");
+const loginLink = document.getElementById("login-link");
+const logoutLink = document.getElementById("logout-link");
+
+const token = getTokenCookie();
+const isAuthenticated = Boolean(token);
 
 const params = new URLSearchParams(window.location.search);
 const placeId = params.get("id");
@@ -18,19 +23,35 @@ if (!placeId) {
 
 async function initializePage() {
   try {
-    const token = getTokenCookie();
+    configureAuthUi();
     const place = await apiRequest(`/places/${encodeURIComponent(placeId)}`, {}, token || null);
     renderPlace(place);
 
     const reviews = await fetchPlaceReviews(placeId, token || null);
     renderReviews(reviews);
 
-    if (isAuthenticated()) {
+    if (isAuthenticated) {
       addReviewSection.classList.remove("hidden");
       addReviewButton.href = `add_review.html?place_id=${encodeURIComponent(placeId)}`;
     }
   } catch (error) {
     setError(error.message || "Could not load place details.");
+  }
+}
+
+function configureAuthUi() {
+  bindLogout("#logout-link");
+
+  if (loginLink) {
+    loginLink.style.display = isAuthenticated ? "none" : "inline-flex";
+  }
+
+  if (logoutLink) {
+    logoutLink.style.display = isAuthenticated ? "inline-flex" : "none";
+  }
+
+  if (!isAuthenticated && addReviewSection) {
+    addReviewSection.classList.add("hidden");
   }
 }
 
@@ -54,15 +75,28 @@ function renderPlace(place) {
       ? `${place.host.first_name} ${place.host.last_name}`
       : place.host?.name || "Unknown host";
 
-  const lines = [
-    `<h2>${escapeHtml(place.name || "Place")}</h2>`,
-    `<p class="place-meta">Host: ${escapeHtml(hostName)}</p>`,
-    `<p class="place-meta">Price per night: $${escapeHtml(String(place.price_by_night ?? place.price ?? "N/A"))}</p>`,
-    `<p class="place-meta">Description: ${escapeHtml(place.description || "No description provided")}</p>`,
-    `<p class="place-meta">Amenities: ${escapeHtml(amenities)}</p>`
-  ];
+  placeDetails.textContent = "";
 
-  placeDetails.innerHTML = lines.join("");
+  const title = document.createElement("h2");
+  title.textContent = place.name || "Place";
+
+  const host = document.createElement("p");
+  host.className = "place-meta";
+  host.textContent = `Host: ${hostName}`;
+
+  const price = document.createElement("p");
+  price.className = "place-meta";
+  price.textContent = `Price per night: $${String(place.price_by_night ?? place.price ?? "N/A")}`;
+
+  const description = document.createElement("p");
+  description.className = "place-meta";
+  description.textContent = `Description: ${place.description || "No description provided"}`;
+
+  const amenitiesInfo = document.createElement("p");
+  amenitiesInfo.className = "place-meta";
+  amenitiesInfo.textContent = `Amenities: ${amenities}`;
+
+  placeDetails.append(title, host, price, description, amenitiesInfo);
 }
 
 function renderReviews(reviews) {
@@ -102,13 +136,4 @@ function renderReviews(reviews) {
 function setError(text) {
   message.textContent = text;
   message.className = "message error";
-}
-
-function escapeHtml(text) {
-  return String(text)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
 }

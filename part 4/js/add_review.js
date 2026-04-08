@@ -1,20 +1,22 @@
 import { apiRequest } from "./api.js";
-import { getTokenCookie, requireAuth } from "./auth.js";
+import { bindLogout, getTokenCookie } from "./auth.js";
 
 const form = document.getElementById("review-form");
 const message = document.getElementById("message");
+const loginLink = document.getElementById("login-link");
+const logoutLink = document.getElementById("logout-link");
 
-if (!requireAuth("index.html")) {
-  throw new Error("User must be logged in.");
-}
+const token = checkAuthentication();
 
 const params = new URLSearchParams(window.location.search);
 const placeId = params.get("place_id");
 
 if (!placeId) {
-  message.textContent = "Missing place id in URL."
+  message.textContent = "Missing place id in URL.";
   message.className = "message error";
 }
+
+configureAuthUi();
 
 form?.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -22,7 +24,7 @@ form?.addEventListener("submit", async (event) => {
   message.className = "message";
 
   if (!placeId) {
-    message.textContent = "Missing place id."
+    message.textContent = "Missing place id.";
     message.classList.add("error");
     return;
   }
@@ -44,28 +46,62 @@ form?.addEventListener("submit", async (event) => {
   }
 
   try {
-    const token = getTokenCookie();
-
     try {
-      await apiRequest(`/places/${encodeURIComponent(placeId)}/reviews`, {
-        method: "POST",
-        body: JSON.stringify({ text: comment, rating })
-      }, token);
+      await submitReviewToPlaceEndpoint(token, placeId, comment, rating);
     } catch (error) {
-      await apiRequest("/reviews", {
-        method: "POST",
-        body: JSON.stringify({ place_id: placeId, text: comment, rating })
-      }, token);
+      await submitReviewToReviewsEndpoint(token, placeId, comment, rating);
     }
 
-    message.textContent = "Review added successfully. Redirecting...";
+    message.textContent = "Review submitted successfully.";
     message.classList.add("success");
-
-    window.setTimeout(() => {
-      window.location.href = `place.html?id=${encodeURIComponent(placeId)}`;
-    }, 450);
+    form.reset();
   } catch (error) {
     message.textContent = error.message || "Could not add review.";
     message.classList.add("error");
   }
 });
+
+function checkAuthentication() {
+  const jwtToken = getTokenCookie();
+
+  if (!jwtToken) {
+    window.location.href = "index.html";
+    return "";
+  }
+
+  return jwtToken;
+}
+
+function configureAuthUi() {
+  bindLogout("#logout-link");
+
+  if (loginLink) {
+    loginLink.style.display = "none";
+  }
+
+  if (logoutLink) {
+    logoutLink.style.display = "inline-flex";
+  }
+}
+
+function submitReviewToPlaceEndpoint(jwtToken, id, comment, rating) {
+  return apiRequest(
+    `/places/${encodeURIComponent(id)}/reviews`,
+    {
+      method: "POST",
+      body: JSON.stringify({ text: comment, rating })
+    },
+    jwtToken
+  );
+}
+
+function submitReviewToReviewsEndpoint(jwtToken, id, comment, rating) {
+  return apiRequest(
+    "/reviews",
+    {
+      method: "POST",
+      body: JSON.stringify({ place_id: id, text: comment, rating })
+    },
+    jwtToken
+  );
+}
