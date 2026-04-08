@@ -1,8 +1,10 @@
-# HBnB Frontend - Part 4
+# HBnB - Holberton AirBnB Clone
 
 ![HBnB Logo](./favicon-96x96.png)
 
-A modular, vanilla JavaScript frontend for HBnB that connects to a REST API and delivers:
+RESTful backend project developed in Python and Flask as part of the Holberton School curriculum. It is a partial Airbnb clone with user, place, amenity, and review management, plus JWT authentication and SQLAlchemy persistence.
+
+This repository contains the Part 4 frontend module, a modular vanilla JavaScript client that connects to the API and delivers:
 - authentication with JWT cookies
 - dynamic place listing with client-side price filtering
 - place details with amenities and reviews
@@ -312,5 +314,8 @@ Potential next improvements:
 ## 10) Credits
 
 HBnB Frontend - Holberton School project, Part 4.
+
+Authors:
+- CodexSC
 
 Designed and implemented as a clean, modular, API-driven client with a cohesive visual language.
