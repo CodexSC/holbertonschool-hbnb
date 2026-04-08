@@ -24,12 +24,28 @@ loginForm?.addEventListener("submit", async (event) => {
   }
 
   try {
-    const response = await apiRequest("/auth/login", {
+    const loginPayload = {
       method: "POST",
       body: JSON.stringify({ email, password })
-    });
+    };
 
-    const token = response.access_token || response.token || response.jwt || "";
+    let response;
+    try {
+      response = await apiRequest("/users/login", loginPayload);
+    } catch (firstError) {
+      try {
+        response = await apiRequest("/auth/login", loginPayload);
+      } catch (secondError) {
+        response = await apiRequest("/login", loginPayload);
+      }
+    }
+
+    const token =
+      response.access_token ||
+      response.token ||
+      response.jwt ||
+      response.data?.access_token ||
+      "";
     if (!token) {
       throw new Error("Authentication token missing in response.");
     }

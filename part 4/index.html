@@ -4,32 +4,36 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>HBnB - Places</title>
-    <link rel="icon" type="image/png" href="icon.png" />
+    <link rel="icon" type="image/png" sizes="96x96" href="favicon-96x96.png" />
     <link rel="stylesheet" href="styles.css" />
   </head>
-  <body>
+  <body class="page-index">
     <header class="site-header">
       <a class="brand" href="index.html">
-        <img src="logo.png" alt="HBnB logo" class="logo" />
+        <img src="favicon-96x96.png" alt="HBnB logo" class="logo" />
         <h1 class="site-title">HBnB</h1>
       </a>
       <nav class="nav-links" aria-label="Primary navigation">
         <a class="nav-link" href="index.html">Places</a>
-        <a class="nav-link" href="login.html">Login</a>
+        <a id="login-link" class="nav-link" href="login.html">Login</a>
         <a id="logout-link" class="login-button" href="login.html">Logout</a>
       </nav>
     </header>
 
-    <main>
-      <section class="hero">
+    <main class="index-main">
+      <section class="hero index-hero">
+        <p class="hero-kicker">HBnB</p>
         <h2>Discover stays with character</h2>
-        <p>Browse available places and narrow the list by country.</p>
+        <p>Browse available places and narrow the list by your budget.</p>
       </section>
 
-      <section class="controls" aria-label="Filters">
-        <label for="country-filter">Country</label>
-        <select id="country-filter" name="country-filter">
-          <option value="">All countries</option>
+      <section class="controls filters-panel" aria-label="Filters">
+        <label for="price-filter">Max Price Per Night</label>
+        <select id="price-filter" name="price-filter">
+          <option value="all">All</option>
+          <option value="10">10</option>
+          <option value="50">50</option>
+          <option value="100">100</option>
         </select>
       </section>
 

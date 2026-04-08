@@ -1,4 +1,4 @@
-const TOKEN_COOKIE = "hbnb_token";
+const TOKEN_COOKIE = "token";
 const ONE_DAY_IN_SECONDS = 60 * 60 * 24;
 
 export function setTokenCookie(token) {
