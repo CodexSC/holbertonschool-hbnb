@@ -1,8 +1,6 @@
-<p align="center">
-  <img src="favicon-96x96.png" alt="HBnB Logo" width="96" height="96">
-</p>
+# HBnB Frontend - Part 4
 
-<h1 align="center">HBnB Frontend - Part 4</h1>
+![HBnB Logo](./favicon-96x96.png)
 
 A modular, vanilla JavaScript frontend for HBnB that connects to a REST API and delivers:
 - authentication with JWT cookies
@@ -53,22 +51,22 @@ This preserves cohesion between login, listing, details, and review workflows.
 
 ```text
 part 4/
-├── README.md
-├── index.html
-├── login.html
-├── place.html
-├── add_review.html
-├── styles.css
-├── favicon-96x96.png
-├── favicon/
-│   └── site.webmanifest
-└── js/
-    ├── api.js
-    ├── auth.js
-    ├── login.js
-    ├── index.js
-    ├── place.js
-    └── add_review.js
+|-- README.md
+|-- index.html
+|-- login.html
+|-- place.html
+|-- add_review.html
+|-- styles.css
+|-- favicon-96x96.png
+|-- favicon/
+|   `-- site.webmanifest
+`-- js/
+  |-- api.js
+  |-- auth.js
+  |-- login.js
+  |-- index.js
+  |-- place.js
+  `-- add_review.js
 ```
 
 ---
